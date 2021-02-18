@@ -8,7 +8,6 @@
 #![no_std]
 
 use embedded_hal as hal;
-use libm;
 
 use bit_field::BitField;
 
@@ -113,7 +112,7 @@ where
     pub fn set_framerate(&mut self, framerate: Framerate) -> Result<(), Error<E>> {
         self.set_register(Register::Framerate, framerate as u8)
     }
-    pub fn get_framerate(&mut self) -> Result<(Framerate), Error<E>> {
+    pub fn get_framerate(&mut self) -> Result<Framerate, Error<E>> {
         let fps = self.get_register(Register::Framerate as u8)?;
         if fps == 0 {
             Ok(Framerate::Fps10)
@@ -273,7 +272,7 @@ where
         let intval = self.get_register_as_u16(Register::IntLevelLowerLsb as u8)?;
         Ok(intval)
     }
- 
+
     pub fn hysteresis_int_value_celsius(&mut self) -> Result<f32, Error<E>> {
         let temperature = self.hysteresis_int_value_raw()?;
         Ok(temperature_u12_to_f32_celsius(temperature, 0.25))
@@ -328,14 +327,14 @@ fn temperature_u12_to_f32_celsius(temperature: u16, factor: f32) -> f32 {
     }
 }
 fn temperature_f32_to_u16_celsius(mut celsius: f32) -> u16 {
-       let mut neg = false;
-        if celsius < 0.0 {
-            celsius = libm::fabsf(celsius);
-            neg = true;
-        }
-        let mut temp = celsius as u16;
-        if neg {
-            temp = *temp.set_bit(11, true);
-        }
-        return temp
+    let mut neg = false;
+    if celsius < 0.0 {
+        celsius = libm::fabsf(celsius);
+        neg = true;
+    }
+    let mut temp = celsius as u16;
+    if neg {
+        temp = *temp.set_bit(11, true);
+    }
+    temp
 }

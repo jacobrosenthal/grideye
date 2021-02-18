@@ -2,7 +2,6 @@
 # Copyright 2018 Uwe Arzt, mail@uwe-arzt.de
 # SPDX-License-Identifier: Apache-2.0
 # ------------------------------------------------------------------------------
-
 [package]
 name = "grideye"
 version = "0.2.4"
@@ -16,21 +15,20 @@ license = "Apache-2.0"
 repository = "https://github.com/uwearzt/grideye"
 
 [dependencies]
-embedded-hal = "0.2.3"
-bit_field = "0.10.0"
+embedded-hal = "0.2.4"
+bit_field = "0.10.1"
 libm = "0.2.1"
 
 # ------------------------------------------------------------------------------
 # build  example stm32.rs
 [dev-dependencies]
-# panic-semihosting ="0.5.0"
-# cortex-m = "0.5.7"
-# cortex-m-rt = "0.6.3"
+panic-halt = "0.2.0"
+cortex-m = "0.7.1"
+cortex-m-rt = "0.6.13"
 
-# [dependencies.stm32f4]
-# version = "0.2.3"
-# features = ["stm32f405", "rt"]
-
+[dependencies.stm32f4xx-hal]
+version = "0.8.3"
+features = ["stm32f405", "rt"]
 # ------------------------------------------------------------------------------
 # build example raspberrypi.rs
-linux-embedded-hal = "0.2.2"
+# linux-embedded-hal = "0.2.2"

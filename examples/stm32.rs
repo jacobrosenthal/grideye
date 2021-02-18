@@ -6,50 +6,37 @@
 #![no_main]
 #![no_std]
 
-extern crate cortex_m;
-use cortex_m::asm;
+use grideye::{Address, GridEye, Power};
+use panic_halt as _;
+use stm32f4xx_hal::{delay::Delay, i2c::I2c, prelude::*, stm32 as hal};
 
-extern crate cortex_m_rt as rt;
-use rt::entry;
-use rt::exception;
-
-extern crate panic_semihosting;
-extern crate stm32f4;
-use stm32f4::stm32f405;
-
-use rt::ExceptionFrame;
-
-//extern crate grideye;
-//use grideye::GridEye;
-
-extern crate embedded_hal;
-
-#[entry]
+#[cortex_m_rt::entry]
 fn main() -> ! {
+    let dp = hal::Peripherals::take().unwrap();
+    let cp = cortex_m::peripheral::Peripherals::take().unwrap();
 
-    let peripherals = stm32f405::Peripherals::take().unwrap();
-    let gpioa = &peripherals.GPIOA;
-    let rcc = &peripherals.RCC;
+    // Set up the system clock. We want to run at 48MHz for this one.
+    let rcc = dp.RCC.constrain();
+    let clocks = rcc.cfgr.sysclk(48.mhz()).freeze();
 
-    rcc.ahb1enr.modify(|_, w| w.gpioaen().enabled());
-    rcc.apb1enr.modify(|_, w| w.tim7en().enabled());
+    let delay = Delay::new(cp.SYST, clocks);
 
-    gpioa.moder.modify(|_, w| w.moder8().output());
-    
+    // Set up I2C - SCL is PB8 and SDA is PB9; they are set to Alternate Function 4
+    // as per the STM32F446xC/E datasheet page 60. Pin assignment as per the Nucleo-F446 board.
+    let gpiob = dp.GPIOB.split();
+    let scl = gpiob.pb8.into_alternate_af4().set_open_drain();
+    let sda = gpiob.pb9.into_alternate_af4().set_open_drain();
+    let i2c = I2c::i2c1(dp.I2C1, (scl, sda), 400.khz(), clocks);
+
+    let mut grideye = GridEye::new(i2c, delay, Address::Standard);
+    grideye.power(Power::Wakeup).unwrap();
+
     loop {
-        gpioa.bsrr.write(|w| w.bs8().set());
-        asm::delay(10000000);
-        gpioa.bsrr.write(|w| w.br8().reset());
-        asm::delay(10000000);
+        for x in 0..8 {
+            for y in 0..8 {
+                let pixel = (x * 8) + y;
+                let _temp = grideye.get_pixel_temperature_celsius(pixel).unwrap();
+            }
+        }
     }
-}
-
-#[exception]
-fn HardFault(ef: &ExceptionFrame) -> ! {
-    panic!("HardFault at {:#?}", ef);
-}
-
-#[exception]
-fn DefaultHandler(irqn: i16) {
-    panic!("Unhandled exception (IRQn = {})", irqn);
 }
