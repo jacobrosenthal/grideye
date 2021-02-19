@@ -5,8 +5,8 @@
 
 use linux_embedded_hal as hal;
 
+use crate::hal::I2cdev;
 use grideye::{Address, GridEye, Power};
-use crate::hal::{Delay, I2cdev};
 
 use std::{thread, time};
 
@@ -14,7 +14,7 @@ fn main() -> Result<(), std::io::Error> {
     println!("GridEye Example");
 
     let i2c = I2cdev::new("/dev/i2c-1").unwrap();
-    let mut grideye = GridEye::new(i2c, Delay, Address::Standard);
+    let mut grideye = GridEye::new(i2c, Address::Standard);
     grideye.power(Power::Wakeup).unwrap();
 
     // get the device temperature
@@ -35,7 +35,7 @@ fn main() -> Result<(), std::io::Error> {
                     print!(";");
                 }
             }
-            println!("");
+            println!();
         }
 
         let sleeptime = time::Duration::from_secs(5);

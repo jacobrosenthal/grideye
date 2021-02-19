@@ -11,7 +11,6 @@ use embedded_hal as hal;
 
 use bit_field::BitField;
 
-use crate::hal::blocking::delay::DelayMs;
 use crate::hal::blocking::i2c::{Read, Write, WriteRead};
 
 /// Errors
@@ -65,24 +64,18 @@ pub enum Framerate {
 }
 
 #[allow(dead_code)]
-pub struct GridEye<I2C, D> {
+pub struct GridEye<I2C> {
     i2c: I2C,
-    delay: D,
     address: Address,
 }
 
-impl<I2C, D, E> GridEye<I2C, D>
+impl<I2C, E> GridEye<I2C>
 where
     I2C: Read<Error = E> + Write<Error = E> + WriteRead<Error = E>,
-    D: DelayMs<u8>,
 {
     /// Creates a new driver
-    pub fn new(i2c: I2C, delay: D, address: Address) -> Self {
-        GridEye {
-            i2c,
-            delay,
-            address,
-        }
+    pub fn new(i2c: I2C, address: Address) -> Self {
+        GridEye { i2c, address }
     }
 
     // ---- Sensor array ---------------------------------------------------------------------------
