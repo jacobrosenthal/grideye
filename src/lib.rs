@@ -78,11 +78,30 @@ where
         GridEye { i2c, address }
     }
 
+    /// Reset
+    pub fn reset(&mut self) -> Result<(), Error<E>> {
+        self.set_register(Register::Reset, 0x3F)
+    }
+
     // ---- Sensor array ---------------------------------------------------------------------------
     /// Get pixel value for pixel 0-63 as raw value
     pub fn get_pixel_temperature_raw(&mut self, pixel: u8) -> Result<u16, Error<E>> {
         let pixel_low = Register::TemperatureStart as u8 + (2 * pixel);
         self.get_register_as_u16(pixel_low)
+    }
+
+    /// Get pixel value for pixel 0-63 as raw value
+    pub fn get_pixels_temperature_raw(&mut self, buffer: &mut [u8; 128]) -> Result<(), Error<E>> {
+        let cmd = [Register::TemperatureStart as u8];
+        self.i2c
+            .write(self.address as u8, &cmd)
+            .map_err(Error::I2c)?;
+        self.i2c
+            .read(self.address as u8, buffer)
+            .map_err(Error::I2c)?;
+
+        // Ok(((buffer[1] as u16) << 8) + (buffer[0] as u16))
+        Ok(())
     }
 
     /// Get pixel value for pixel 0-63 as celsius
@@ -309,7 +328,7 @@ where
     }
 }
 // ---- conversion -----------------------------------------------------------------------------
-fn temperature_u12_to_f32_celsius(temperature: u16, factor: f32) -> f32 {
+pub fn temperature_u12_to_f32_celsius(temperature: u16, factor: f32) -> f32 {
     // check if temperature is negative
     if !temperature.get_bit(11) {
         temperature as f32 * factor

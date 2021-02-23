@@ -18,6 +18,9 @@ repository = "https://github.com/uwearzt/grideye"
 embedded-hal = "0.2.4"
 bit_field = "0.10.1"
 libm = "0.2.1"
+itertools = { version = "0.10.0", default-features = false }
+typenum = "1.12.0"
+heapless = "0.6.0"
 
 [dev-dependencies]
 cortex-m = "0.7.1"
@@ -27,6 +30,24 @@ rtt-target = { version = "0.3.0", features = ["cortex-m"] }
 [dependencies.stm32f4xx-hal]
 version = "0.8.3"
 features = ["stm32f405", "rt"]
+
 # ------------------------------------------------------------------------------
 # build example raspberrypi.rs
 # linux-embedded-hal = "0.2.2"
+[profile.dev]
+codegen-units = 1
+debug = 1
+debug-assertions = true # !
+incremental = false
+lto = "fat"
+opt-level = 'z' # !
+overflow-checks = false
+
+[profile.release]
+codegen-units = 1
+debug = 1
+debug-assertions = false
+incremental = false
+lto = "fat"
+opt-level = 3
+overflow-checks = false
